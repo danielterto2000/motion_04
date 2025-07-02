@@ -1,0 +1,47 @@
+yarn run v1.22.22
+$ next dev --hostname 0.0.0.0 --port 3000
+  ▲ Next.js 14.2.28
+  - Local:        http://localhost:3000
+  - Network:      http://0.0.0.0:3000
+  - Environments: .env.local, .env
+  - Experiments (use with caution):
+    · outputFileTracingRoot
+
+ ✓ Starting...
+ ✓ Ready in 2.5s
+ ○ Compiling / ...
+ ✓ Compiled / in 4.3s (1483 modules)
+ GET / 200 in 5005ms
+ ✓ Compiled in 741ms (744 modules)
+ GET / 200 in 89ms
+ ○ Compiling /middleware ...
+ ✓ Compiled /middleware in 1058ms (1648 modules)
+ GET /site.webmanifest 404 in 1205ms
+ ✓ Compiled /api/auth/[...nextauth] in 465ms (983 modules)
+[next-auth][warn][DEBUG_ENABLED] 
+https://next-auth.js.org/warnings#debug_enabled
+ GET /api/auth/session 200 in 1184ms
+ GET /api/auth/session 200 in 46ms
+ GET /api/auth/session 200 in 34ms
+ GET /api/auth/session 200 in 33ms
+ GET / 200 in 183ms
+ GET /site.webmanifest 404 in 38ms
+ GET /api/auth/session 200 in 36ms
+ GET /api/auth/session 200 in 29ms
+ GET /api/auth/session 200 in 25ms
+ GET /api/auth/session 200 in 22ms
+ GET /api/auth/session 200 in 24ms
+ ✓ Compiled in 762ms (1729 modules)
+ ✓ Compiled in 632ms (1729 modules)
+ ✓ Compiled in 609ms (1729 modules)
+ GET / 200 in 103ms
+ GET /site.webmanifest 404 in 26ms
+[next-auth][warn][DEBUG_ENABLED] 
+https://next-auth.js.org/warnings#debug_enabled
+ GET /api/auth/session 200 in 87ms
+ GET /api/auth/session 200 in 28ms
+ GET /api/auth/session 200 in 25ms
+ GET /api/auth/session 200 in 43ms
+ GET /api/auth/session 200 in 36ms
+ GET /api/auth/session 200 in 44ms
+[?25h

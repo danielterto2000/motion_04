@@ -1,0 +1,820 @@
+generator client {
+  provider      = "prisma-client-js"
+  output        = "/home/ubuntu/broadcast-motion-site/app/node_modules/.prisma/client"
+  binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  name          String?
+  password      String?
+  userType      UserType       @default(CLIENTE)
+  avatar        String?
+  bio           String?
+  phone         String?
+  website       String?
+  portfolio     String?
+  skills        String[]       @default([])
+  experience    String?
+  location      String?
+  googleId      String?        @unique
+  emailVerified DateTime?
+  isActive      Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  accounts      Account[]
+  activities    ActivityLog[]
+  cartItems     CartItem[]
+  downloads     Download[]
+  jobs          Job[]
+  notifications Notification[]
+  payments      Payment[]
+  proposals     Proposal[]
+  sentProposals Proposal[]     @relation("ProposalSender")
+  reviews       Review[]
+  sessions      Session[]
+  templates     Template[]
+  transactions  Transaction[]
+  withdrawals   Withdrawal[]
+
+  @@map("users")
+}
+
+model Template {
+  id            String               @id @default(cuid())
+  title         String
+  description   String
+  slug          String               @unique
+  price         Float
+  category      TemplateCategory
+  tags          String[]             @default([])
+  previewUrl    String?
+  downloadUrl   String?
+  thumbnailUrl  String?
+  software      String[]             @default([])
+  status        TemplateStatus       @default(DRAFT)
+  isActive      Boolean              @default(true)
+  isFeatured    Boolean              @default(false)
+  downloads     Int                  @default(0)
+  rating        Float                @default(0)
+  reviewCount   Int                  @default(0)
+  fileSize      String?
+  duration      String?
+  resolution    String?
+  fps           String?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  creatorId     String
+  cartItems     CartItem[]
+  downloadLinks Download[]
+  payments      Payment[]
+  reviews       Review[]
+  categories    TemplateToCategory[]
+  files         TemplateFile[]
+  templateTags  TemplateToTag[]
+  creator       User                 @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  @@map("templates")
+}
+
+model Job {
+  id          String     @id @default(cuid())
+  title       String
+  description String
+  jobType     JobType
+  budget      Float?
+  location    String?
+  isRemote    Boolean    @default(false)
+  skills      String[]   @default([])
+  deadline    DateTime?
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  companyId   String
+  company     User       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  proposals   Proposal[]
+
+  @@map("jobs")
+}
+
+model Proposal {
+  id           String         @id @default(cuid())
+  message      String
+  budget       Float?
+  deadline     DateTime?
+  status       ProposalStatus @default(PENDENTE)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  jobId        String
+  freelancerId String
+  senderId     String
+  freelancer   User           @relation(fields: [freelancerId], references: [id], onDelete: Cascade)
+  job          Job            @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  sender       User           @relation("ProposalSender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@map("proposals")
+}
+
+model Contact {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  subject   String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("contacts")
+}
+
+model TemplateFile {
+  id           String   @id @default(cuid())
+  filename     String
+  originalName String
+  fileType     FileType
+  mimeType     String
+  fileSize     Int
+  filePath     String
+  fileUrl      String?
+  isMain       Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  templateId   String
+  template     Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@map("template_files")
+}
+
+model Download {
+  id            String   @id @default(cuid())
+  downloadUrl   String
+  expiresAt     DateTime
+  downloadCount Int      @default(0)
+  maxDownloads  Int      @default(3)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  userId        String
+  templateId    String
+  template      Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("downloads")
+}
+
+model ActivityLog {
+  id          String       @id @default(cuid())
+  type        ActivityType
+  description String
+  metadata    Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime     @default(now())
+  userId      String?
+  user        User?        @relation(fields: [userId], references: [id])
+
+  @@map("activity_logs")
+}
+
+model LoginAttempt {
+  id        String   @id @default(cuid())
+  email     String
+  success   Boolean
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@map("login_attempts")
+}
+
+model Category {
+  id          String               @id @default(cuid())
+  name        String               @unique
+  slug        String               @unique
+  description String?
+  color       String?
+  icon        String?
+  isActive    Boolean              @default(true)
+  sortOrder   Int                  @default(0)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  templates   TemplateToCategory[]
+
+  @@map("categories")
+}
+
+model Tag {
+  id        String          @id @default(cuid())
+  name      String          @unique
+  slug      String          @unique
+  color     String?
+  isActive  Boolean         @default(true)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  templates TemplateToTag[]
+
+  @@map("tags")
+}
+
+model TemplateToCategory {
+  templateId String
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  template   Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@id([templateId, categoryId])
+  @@map("template_categories")
+}
+
+model TemplateToTag {
+  templateId String
+  tagId      String
+  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  template   Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@id([templateId, tagId])
+  @@map("template_tags")
+}
+
+model Payment {
+  id                 String              @id @default(cuid())
+  amount             Float
+  currency           String              @default("BRL")
+  status             PaymentStatus       @default(PENDING)
+  paymentMethod      PaymentMethod
+  externalId         String?             @unique
+  pixKey             String?
+  pixQrCode          String?
+  pixQrCodeBase64    String?
+  boletoUrl          String?
+  boletoBarcode      String?
+  description        String?
+  dueDate            DateTime?
+  paidAt             DateTime?
+  grossAmount        Float
+  feeAmount          Float               @default(0)
+  netAmount          Float
+  metadata           Json?
+  payerDocument      String?
+  payerName          String?
+  payerEmail         String?
+  attempts           Int                 @default(0)
+  lastAttemptAt      DateTime?
+  expiresAt          DateTime?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  userId             String
+  templateId         String?
+  bankReconciliation BankReconciliation?
+  notifications      Notification[]
+  template           Template?           @relation(fields: [templateId], references: [id])
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions       Transaction[]
+  webhookLogs        WebhookLog[]
+
+  @@map("payments")
+}
+
+model CartItem {
+  id         String   @id @default(cuid())
+  quantity   Int      @default(1)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  userId     String
+  templateId String
+  template   Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, templateId])
+  @@map("cart_items")
+}
+
+model Content {
+  id        String      @id @default(cuid())
+  type      ContentType @unique
+  title     String?
+  content   String
+  metadata  Json?
+  isActive  Boolean     @default(true)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@map("contents")
+}
+
+model SystemSettings {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  description String?
+  type        String   @default("string")
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("system_settings")
+}
+
+model Backup {
+  id        String   @id @default(cuid())
+  filename  String
+  fileSize  Int
+  filePath  String
+  type      String
+  status    String   @default("completed")
+  createdAt DateTime @default(now())
+
+  @@map("backups")
+}
+
+model Newsletter {
+  id          String    @id @default(cuid())
+  email       String    @unique
+  isActive    Boolean   @default(true)
+  confirmedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@map("newsletter")
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  rating     Int
+  comment    String?
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  userId     String
+  templateId String
+  template   Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, templateId])
+  @@map("reviews")
+}
+
+model Transaction {
+  id          String          @id @default(cuid())
+  type        TransactionType
+  amount      Float
+  currency    String          @default("BRL")
+  description String?
+  reference   String?
+  metadata    Json?
+  createdAt   DateTime        @default(now())
+  paymentId   String?
+  userId      String?
+  payment     Payment?        @relation(fields: [paymentId], references: [id])
+  user        User?           @relation(fields: [userId], references: [id])
+
+  @@map("transactions")
+}
+
+model WebhookLog {
+  id            String        @id @default(cuid())
+  provider      String
+  event         String
+  status        WebhookStatus @default(PENDING)
+  httpMethod    String
+  headers       Json?
+  body          Json?
+  response      Json?
+  errorMessage  String?
+  attempts      Int           @default(0)
+  lastAttemptAt DateTime?
+  processedAt   DateTime?
+  createdAt     DateTime      @default(now())
+  paymentId     String?
+  payment       Payment?      @relation(fields: [paymentId], references: [id])
+
+  @@map("webhook_logs")
+}
+
+model Notification {
+  id           String           @id @default(cuid())
+  type         NotificationType
+  title        String
+  message      String
+  recipient    String
+  status       String           @default("pending")
+  sentAt       DateTime?
+  errorMessage String?
+  metadata     Json?
+  createdAt    DateTime         @default(now())
+  paymentId    String?
+  userId       String?
+  payment      Payment?         @relation(fields: [paymentId], references: [id])
+  user         User?            @relation(fields: [userId], references: [id])
+
+  @@map("notifications")
+}
+
+model BankAccount {
+  id              String               @id @default(cuid())
+  bankCode        String
+  bankName        String
+  agency          String
+  agencyDigit     String?
+  account         String
+  accountDigit    String?
+  accountType     String               @default("checking")
+  holderName      String
+  holderDocument  String
+  pixKey          String?
+  pixKeyType      String?
+  isActive        Boolean              @default(true)
+  isDefault       Boolean              @default(false)
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  reconciliations BankReconciliation[]
+  withdrawals     Withdrawal[]
+
+  @@map("bank_accounts")
+}
+
+model BankReconciliation {
+  id               String                   @id @default(cuid())
+  bankStatementId  String?
+  transactionDate  DateTime
+  amount           Float
+  description      String
+  reference        String?
+  status           BankReconciliationStatus @default(PENDING)
+  matchedPaymentId String?                  @unique
+  notes            String?
+  reviewedBy       String?
+  reviewedAt       DateTime?
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+  bankAccountId    String
+  bankAccount      BankAccount              @relation(fields: [bankAccountId], references: [id], onDelete: Cascade)
+  matchedPayment   Payment?                 @relation(fields: [matchedPaymentId], references: [id])
+
+  @@map("bank_reconciliations")
+}
+
+model Withdrawal {
+  id               String           @id @default(cuid())
+  amount           Float
+  currency         String           @default("BRL")
+  status           WithdrawalStatus @default(PENDING)
+  requestedAt      DateTime         @default(now())
+  processedAt      DateTime?
+  completedAt      DateTime?
+  description      String?
+  notes            String?
+  feeAmount        Float            @default(0)
+  netAmount        Float
+  targetBankCode   String?
+  targetBankName   String?
+  targetAgency     String?
+  targetAccount    String?
+  targetHolderName String?
+  targetDocument   String?
+  metadata         Json?
+  userId           String
+  bankAccountId    String?
+  bankAccount      BankAccount?     @relation(fields: [bankAccountId], references: [id])
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("withdrawals")
+}
+
+model PaymentGatewayConfig {
+  id            String   @id @default(cuid())
+  provider      String   @unique
+  isActive      Boolean  @default(true)
+  isTestMode    Boolean  @default(true)
+  config        Json
+  fixedFee      Float    @default(0)
+  percentageFee Float    @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("payment_gateway_configs")
+}
+
+model FinancialReport {
+  id                 String   @id @default(cuid())
+  type               String
+  period             String
+  totalRevenue       Float    @default(0)
+  totalFees          Float    @default(0)
+  netRevenue         Float    @default(0)
+  totalPayments      Int      @default(0)
+  successfulPayments Int      @default(0)
+  failedPayments     Int      @default(0)
+  pixRevenue         Float    @default(0)
+  cardRevenue        Float    @default(0)
+  boletoRevenue      Float    @default(0)
+  transferRevenue    Float    @default(0)
+  metadata           Json?
+  generatedAt        DateTime @default(now())
+
+  @@unique([type, period])
+  @@map("financial_reports")
+}
+
+model SiteSettings {
+  id                String   @id @default(cuid())
+  siteName          String   @default("Broadcast Motion Graphics")
+  siteDescription   String?
+  logoUrl           String?
+  faviconUrl        String?
+  primaryColor      String   @default("#1e293b")
+  secondaryColor    String   @default("#3b82f6")
+  accentColor       String   @default("#10b981")
+  email             String?
+  phone             String?
+  address           String?
+  facebookUrl       String?
+  instagramUrl      String?
+  twitterUrl        String?
+  linkedinUrl       String?
+  youtubeUrl        String?
+  metaTitle         String?
+  metaDescription   String?
+  metaKeywords      String?
+  maintenanceMode   Boolean  @default(false)
+  allowRegistration Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("site_settings")
+}
+
+model HeroSlide {
+  id          String   @id @default(cuid())
+  title       String
+  subtitle    String?
+  description String?
+  imageUrl    String
+  buttonText  String?
+  buttonUrl   String?
+  category    String?
+  price       String?
+  rating      Float?
+  downloads   String?
+  tags        String[] @default([])
+  gradient    String   @default("from-blue-600 to-purple-700")
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("hero_slides")
+}
+
+model Feature {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  icon        String
+  benefits    String[] @default([])
+  color       String   @default("from-secondary-500 to-blue-600")
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("features")
+}
+
+model Statistic {
+  id        String   @id @default(cuid())
+  number    String
+  label     String
+  icon      String
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("statistics")
+}
+
+model Testimonial {
+  id         String   @id @default(cuid())
+  name       String
+  role       String?
+  company    String?
+  content    String
+  rating     Int      @default(5)
+  avatarUrl  String?
+  isActive   Boolean  @default(true)
+  isFeatured Boolean  @default(false)
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("testimonials")
+}
+
+model Page {
+  id              String   @id @default(cuid())
+  title           String
+  slug            String   @unique
+  content         String
+  metaTitle       String?
+  metaDescription String?
+  isPublished     Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("pages")
+}
+
+model MediaFile {
+  id           String   @id @default(cuid())
+  filename     String
+  originalName String
+  mimeType     String
+  fileSize     Int
+  filePath     String
+  fileUrl      String
+  alt          String?
+  caption      String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("media_files")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+enum UserType {
+  CLIENTE
+  CRIADOR
+  PROFISSIONAL
+  EMPRESA
+  ADMIN
+}
+
+enum JobType {
+  CLT
+  FREELA
+  TEMPORARIO
+}
+
+enum ProposalStatus {
+  PENDENTE
+  ACEITA
+  REJEITADA
+  CANCELADA
+}
+
+enum TemplateCategory {
+  LOWER_THIRDS
+  TRANSITIONS
+  LOGOS
+  INTROS
+  OUTROS
+}
+
+enum TemplateStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ActivityType {
+  USER_LOGIN
+  USER_LOGOUT
+  TEMPLATE_CREATED
+  TEMPLATE_UPDATED
+  TEMPLATE_DELETED
+  FILE_UPLOADED
+  DOWNLOAD_GENERATED
+  PAYMENT_RECEIVED
+  USER_CREATED
+  USER_UPDATED
+  USER_DELETED
+  ADMIN_ACTION
+  CONTENT_UPDATED
+  SETTINGS_CHANGED
+  BACKUP_CREATED
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+  CANCELLED
+  EXPIRED
+  CHARGEBACK
+}
+
+enum PaymentMethod {
+  PIX
+  CREDIT_CARD
+  DEBIT_CARD
+  BOLETO
+  BANK_TRANSFER
+  MERCADO_PAGO
+}
+
+enum TransactionType {
+  PURCHASE
+  REFUND
+  WITHDRAWAL
+  COMMISSION
+  FEE
+  CHARGEBACK
+}
+
+enum WebhookStatus {
+  PENDING
+  PROCESSED
+  FAILED
+  IGNORED
+  RETRY
+}
+
+enum NotificationType {
+  EMAIL
+  SMS
+  PUSH
+  ADMIN
+  WEBHOOK
+}
+
+enum BankReconciliationStatus {
+  PENDING
+  MATCHED
+  UNMATCHED
+  MANUAL_REVIEW
+  IGNORED
+}
+
+enum WithdrawalStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum FileType {
+  TEMPLATE_FILE
+  THUMBNAIL
+  PREVIEW_VIDEO
+  PREVIEW_IMAGE
+  DOCUMENTATION
+}
+
+enum ContentType {
+  HOMEPAGE_HERO
+  HOMEPAGE_FEATURES
+  HOMEPAGE_TESTIMONIALS
+  HOMEPAGE_CTA
+  FOOTER_TEXT
+  ABOUT_PAGE
+  TERMS_PAGE
+  PRIVACY_PAGE
+  HOMEPAGE_STATS
+  CONTACT_PAGE
+  FAQ_PAGE
+  HERO_SLIDER
+}
